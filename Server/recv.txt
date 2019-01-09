@@ -1,0 +1,4 @@
+c:\temp\ref.txt modify
+VersionControl\2222.txt
+VersionControl\temp\haha.txt
+VersionControl\test.txt
