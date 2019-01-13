@@ -31,6 +31,7 @@ public class ClientVersionControl {
         
         Scanner scan = new Scanner(System.in);
         while(true){
+            String host = "127.0.0.1";
             System.out.println("¿Qué desea hacer?");
             System.out.println("1) Commit");
             System.out.println("2) Update");
@@ -52,8 +53,8 @@ public class ClientVersionControl {
                     }
                 }
                 if(cont == 1){
-                    System.out.println("No hay cambios que committear");
                     ClientUtil.clearScreen();
+                    System.out.println("No hay cambios que committear\n");
                 } else {
                     int com = scan.nextInt();
                     if(!(com > archivos.size() || com < 1)){
@@ -62,46 +63,90 @@ public class ClientVersionControl {
                         String name = f.getName();
                         int pos = name.lastIndexOf(".");
                         if (pos > 0) {
+                            Socket socket = new Socket(host, 4444);; // 
+                            DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+
+                            // Sending the server what's gonna be done
+                            dOut.writeUTF("1");
+                            dOut.flush();
+                            dOut.close();
+                            socket.close();
+                            
                             name = archivos.get(com-1);
                             ClientUtil.commit(new File(auxPath+archivos.get(com-1)), name);
                             ClientUtil.updateRef(archivos.get(com-1));
                         }
                     }
                 }
+                
+            } else if("2".equalsIgnoreCase(opt.trim())){
                 ClientUtil.clearScreen();
+                
+                Socket socket = new Socket(host, 4444);; // 
+                DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
 
-            }
-            
+                // Sending the server what's gonna be done
+                dOut.writeUTF("2");
+                dOut.flush();
+                dOut.close();
+                socket.close();
+                
+                int cont = 1;
+                System.out.println("¿Qué archivo deseas actualizar?");
+                ArrayList<String> files = ClientUtil.getFilesFromServer();
+                for (String file : files){
+                    System.out.println(String.format("%d) %s", cont, file));
+                    cont++;
+                }
+                if(cont == 1){
+                    ClientUtil.clearScreen();
+                    System.out.println("No hay archivos en el servidor\n");
+                } else{
+                    int com = scan.nextInt();
+                    if(!(com > files.size() || com < 1)){
+                        String [] tempfile = files.get(com-1).split("\\.");
+                        ClientUtil.update(String.format("%s_%s", tempfile[0],tempfile[1]));
+                        ClientUtil.clearScreen();
+                    }
+                }
+            } else if("3".equalsIgnoreCase(opt.trim())){
+                ClientUtil.clearScreen();
+                
+                Socket socket = new Socket(host, 4444);; // 
+                DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+
+                // Sending the server what's gonna be done
+                dOut.writeUTF("3");
+                dOut.flush();
+                dOut.close();
+                socket.close();
+                
+                int cont = 1;
+                System.out.println("¿Qué archivo deseas trackear?");
+                ArrayList<String> files = ClientUtil.getFilesFromServer();
+                for (String file : files){
+                    System.out.println(String.format("%d) %s", cont, file));
+                    cont++;
+                }
+                if(cont == 1){
+                    ClientUtil.clearScreen();
+                    System.out.println("No hay archivos en el servidor\n");
+                } else{
+                    int com = scan.nextInt();
+                    if(!(com > files.size() || com < 1)){
+                        int versionCont = 1;
+                        System.out.println("¿Qué versión del archivo"+files.get(com-1)+" deseas trackear?");
+                        String [] tempfile = files.get(com-1).split("\\.");
+                        ArrayList<String> versions = ClientUtil.getVersions(String.format("%s_%s", tempfile[0],tempfile[1]));
+                        for (String version : versions){
+                            System.out.println(String.format("%d) %s", versionCont, version));
+                            versionCont++; 
+                        }
+                        ClientUtil.clearScreen();
+                    }
+                }
+            } else
+                ClientUtil.clearScreen();
         }
-        
-        /*Socket socket = null;
-        String host = "127.0.0.1";
-
-        socket = new Socket(host, 4444);
-
-        File file = new File("c:/temp/test.txt");
-        
-        FileOutputStream fos = new FileOutputStream("c:/temp/test.txt");
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-        for (int i = 0; i<5; i++){
-            bw.write(String.format("Esto es la prueba numero %d",i));
-            bw.newLine();
-        }
-        bw.close();
-        
-        // Get the size of the file
-        long length = file.length();
-        byte[] bytes = new byte[16 * 1024];
-        InputStream in = new FileInputStream(file);
-        OutputStream out = socket.getOutputStream();
-
-        int count;
-        while ((count = in.read(bytes)) > 0) {
-            out.write(bytes, 0, count);
-        }
-
-        out.close();
-        in.close();
-        socket.close();*/
     }
 }

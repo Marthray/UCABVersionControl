@@ -9,8 +9,10 @@ import DirWatcher.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -114,7 +116,164 @@ public class ServerUtil {
      * Se retornorá el commit con mayor timestamp al solicitante.
      * @throws : IOException, 
      */
-    public List<File> update(){
+    public static void update(ServerSocket serverSocket){
+        Socket socket = null;
+        String rootDir = ".\\commits";
+        
+        try {
+            socket = serverSocket.accept();
+            DataInputStream dIn = new DataInputStream(socket.getInputStream());
+            String fileString = dIn.readUTF();
+            dIn.close();
+            socket.close();
+            
+            File temp = new File(String.format("%s\\%s",rootDir,fileString));
+            String[] directories = temp.list(new FilenameFilter() {
+                @Override
+                public boolean accept(File current, String name) {
+                  return new File(current, name).isDirectory();
+                }
+            });
+            
+            String basePath = String.format("%s\\%s\\%s",rootDir,fileString,directories[directories.length - 1]);
+            String relativePath = "";
+            
+            temp = new File(basePath);
+            
+            File [] files = ServerUtil.listf(basePath, null);
+            
+            if(files[0].getPath().startsWith(basePath)){
+                relativePath = files[0].getPath().substring(basePath.length()+1);
+            }
+            
+            socket = serverSocket.accept();
+            DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+
+            dOut.writeUTF(relativePath);
+            dOut.flush(); // Send off the data
+
+            dOut.close();
+            socket.close();
+            
+            socket = serverSocket.accept();
+            
+            byte[] bytes = new byte[16 * 1024];
+            InputStream in = new FileInputStream(files[0]);
+            OutputStream out = socket.getOutputStream();
+
+            int count;
+            while ((count = in.read(bytes)) > 0) {
+                out.write(bytes, 0, count);
+            }
+            out.close();
+            in.close();
+            
+            socket.close();
+            
+        } catch (IOException ex) {
+            Logger.getLogger(ServerUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public static void returnFiles(ServerSocket serverSocket){
+        Socket socket = null;
+        String files = "";
+        String rootDir = "./commits";
+        File temp = new File(rootDir);
+        
+        String[] directories = temp.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File current, String name) {
+              return new File(current, name).isDirectory();
+            }
+        });
+        
+        for (int i = 0; i<directories.length; i++){
+            String current = String.format("%s.%s",directories[i].split("_")[0],directories[i].split("_")[1]);
+            if(i < directories.length - 1)
+                files = files.concat(current+"|");
+            else
+                files = files.concat(current);
+        }
+        
+        try {
+            socket = serverSocket.accept();
+            DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+
+            // Send first message
+            dOut.writeUTF(files);
+            dOut.flush(); // Send off the data
+
+            dOut.close();
+            socket.close();
+        } catch (IOException ex) {
+            Logger.getLogger(ServerUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public static File[] listf(String directoryName, ArrayList<File> files) {
+        File directory = new File(directoryName);
+        // Get all files from a directory.
+        File[] fList = directory.listFiles();
+        
+        if(files == null){
+            files = new ArrayList<File>();
+        }
+        
+        if(fList != null){
+            for (File file : fList) {      
+                if (file.isFile()) {
+                    files.add(file);
+                } else if (file.isDirectory()) {
+                    listf(file.getPath(), files);
+                }
+            }
+            return files.toArray(new File[files.size()]);
+        }
         return null;
+    }
+
+    public static void checkout(ServerSocket serverSocket) {
+        
+    }
+
+    static void returnVersions(ServerSocket serverSocket) {
+        String rootDir = "commits";
+        String versions = "";
+        try {
+            Socket socket = serverSocket.accept();
+            DataInputStream dIn = new DataInputStream(socket.getInputStream());
+            String folder = dIn.readUTF();
+            dIn.close();
+            socket.close();
+            
+            
+            File temp = new File(rootDir+"\\"+folder);
+            String[] directories = temp.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File current, String name) {
+              return new File(current, name).isDirectory();
+            }
+            });
+            
+            SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
+            
+            for (int i = 0; i<directories.length; i++){
+                if(i < directories.length - 1)
+                    versions = versions.concat(String.format("%s %s|",directories[i], sdf.format(new File(rootDir+"\\"+folder+"\\"+directories[i]).lastModified())));
+                else
+                    versions = versions.concat(String.format("%s %s",directories[i], sdf.format(new File(rootDir+"\\"+folder+"\\"+directories[i]).lastModified())));
+            }
+            
+            socket = serverSocket.accept();
+            DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+            // Send first message
+            dOut.writeUTF(versions);
+            dOut.flush(); // Send off the data
+            dOut.close();
+        } catch (IOException ex) {
+            Logger.getLogger(ServerUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
 }

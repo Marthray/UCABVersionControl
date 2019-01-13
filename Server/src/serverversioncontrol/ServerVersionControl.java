@@ -134,7 +134,27 @@ public class ServerVersionControl {
         }
         
         while(true){
-            ServerUtil.commit(serverSocket);
+            Socket socket = null;
+            socket = serverSocket.accept();
+            DataInputStream dIn = new DataInputStream(socket.getInputStream());
+            String opt = dIn.readUTF();
+            dIn.close();
+            socket.close();
+            switch(opt){
+                case "1":
+                    ServerUtil.commit(serverSocket);
+                    break;
+                case "2":
+                    ServerUtil.returnFiles(serverSocket);
+                    ServerUtil.update(serverSocket);
+                    break;
+                case "3":
+                    ServerUtil.returnFiles(serverSocket);
+                    ServerUtil.returnVersions(serverSocket);
+                    ServerUtil.checkout(serverSocket);
+                    break;
+            }
+            
         }
     }
 }

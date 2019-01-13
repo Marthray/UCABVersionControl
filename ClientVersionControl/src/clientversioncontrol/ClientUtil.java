@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -26,6 +27,10 @@ public class ClientUtil {
         System.out.println(new String(new char[50]).replace("\0", "\r\n"));
     }
     
+    /** Metodo que limpia el archivo ref.txt una vez se realiza el commit
+     * 
+     * @param ref 
+     */
     public static void updateRef(String ref){
         try {
             List<String> lines = Files.readAllLines(new File("ref.txt").toPath());
@@ -44,6 +49,12 @@ public class ClientUtil {
         }
     }
     
+    /** Metodo que hace commit hacia el server principal del archivo seleccionado
+     * 
+     * @param f
+     * @param ruta
+     * @throws IOException 
+     */
     public static void commit (File f, String ruta) throws IOException{
         String host = "127.0.0.1";
         Socket socket = new Socket(host, 4444);
@@ -71,66 +82,110 @@ public class ClientUtil {
         in.close();
         socket.close();
     }
-    /**
-     * @method: commit
-     * Aqui se va a recibir como parametro una lista de registros, donde el registro contendrá:
-     * 1) El archivo a guardar. Datatype: File
-     * 2) Ruta del archivo a guardar (utilizando "~" como la raíz del proyecto, no ruta absoluta). Datatype: String
-     * @throws : IOException
-     * @param: List<FileRecord> files
-     */
-    public static void commit(File [] files, File changes){
-        try{
-            String host = "127.0.0.1";
-            if(changes.length()>0){
-                Socket socket = new Socket(host, 4444);
-                //Se envía primero el archivo de cambios
-                byte[] bytes = new byte[16 * 1024];
-                InputStream in = new FileInputStream(changes);
-                OutputStream out = socket.getOutputStream();
-
-                int count;
-                while ((count = in.read(bytes)) > 0) {
-                    out.write(bytes, 0, count);
-                }
-                out.close();
-                in.close();
-                socket.close();
-                
-                for(File f : files){
-                    if(!"ref.txt".equals(f.getName())){
-                        while(!socket.isClosed()){
-                            System.out.println("Cerrado");
-                        }
-                        socket = new Socket(host, 4444);
-                        long length = f.length();
-                        bytes = new byte[16 * 1024];
-                        in = new FileInputStream(f);
-                        out = socket.getOutputStream();
-
-                        while ((count = in.read(bytes)) > 0) {
-                            out.write(bytes, 0, count);
-                        }
-                        out.close();
-                        in.close();
-                        socket.close();
-                    }
-                }
-            }
-        }catch (FileNotFoundException e){
-            System.out.println("No se encontró el archivo");
-        }
-        catch (IOException e){
-            System.out.println("Error de escritura");
-        }
-    }
-    
+ 
     /**
      * @method: update
-     * Se retornorá el commit con mayor timestamp al solicitante.
+     * Se retornorá el commit con mayor ID del archivo solicitado.
      * @throws : IOException, 
      */
-    public static List<File> update(){
-        return null;
+    public static void update(String file){
+        String auxPath = "c:\\temp";
+        String host = "127.0.0.1";
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            //Este bloque obtiene la ruta completa del archivo en el repo
+            Socket socket = new Socket(host, 4444);
+            DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+            dOut.writeUTF(file);
+            dOut.flush();
+            dOut.close();
+            socket.close();
+            
+            socket = new Socket(host, 4444);
+            
+            DataInputStream dIn = new DataInputStream(socket.getInputStream());
+            String filePath = dIn.readUTF();
+            dIn.close();
+            socket.close();
+            
+            socket = new Socket (host, 4444);
+            File serverFile = new File(auxPath+"\\"+filePath);
+            serverFile.getParentFile().mkdirs();
+            
+            try {
+                in = socket.getInputStream();
+            } catch (IOException ex) {
+                System.out.println("Can't get socket input stream. ");
+            }
+
+            try {
+                out = new FileOutputStream(serverFile);
+            } catch (FileNotFoundException ex) {
+                System.out.println("File not found. ");
+            }
+            
+            byte[] bytes = new byte[16*1024];
+
+            int count;
+            while ((count = in.read(bytes)) > 0) {
+                out.write(bytes, 0, count);
+            }
+
+            out.close();
+            in.close();
+            socket.close();
+            
+            
+        } catch (IOException ex) {
+            Logger.getLogger(ClientUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
+    
+    public static ArrayList<String> getFilesFromServer() throws IOException{
+        String host = "127.0.0.1";
+        Socket socket = new Socket(host, 4444);
+        String [] archivos = null;
+        
+        DataInputStream dIn = new DataInputStream(socket.getInputStream());
+        String filesString = dIn.readUTF();
+        dIn.close();
+        socket.close();
+        
+        archivos = filesString.split("\\|");
+        
+        return new ArrayList<String>(Arrays.asList(archivos));
+    }
+    
+    public static ArrayList<String> getVersions(String file){
+        String host = "127.0.0.1";
+        String[] versions = null;
+        try {
+            Socket socket = new Socket (host, 4444);
+            
+            DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+
+            // Send first message
+            dOut.writeUTF(file);
+            dOut.flush(); // Send off the data
+            dOut.close();
+            socket.close();
+            
+            socket = new Socket(host, 4444);
+            
+            DataInputStream dIn = new DataInputStream(socket.getInputStream());
+            String versionsString = dIn.readUTF();
+            dIn.close();
+            
+            versions = versionsString.split("\\|");
+            
+            socket.close();
+            
+        } catch (IOException ex) {
+            Logger.getLogger(ClientUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return new ArrayList<String>(Arrays.asList(versions));
     }
 }
