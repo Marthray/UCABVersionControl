@@ -31,12 +31,45 @@ public class ClientVersionControl {
         
         Scanner scan = new Scanner(System.in);
         while(true){
-            System.out.println("Desea hacer commit?");
+            System.out.println("¿Qué desea hacer?");
+            System.out.println("1) Commit");
+            System.out.println("2) Update");
+            System.out.println("3) Checkout");
             String opt = scan.nextLine();
 
-            if("Y".equalsIgnoreCase(opt)){
-                DirWatcher dir = new DirWatcher("c:/temp", "" );
-                ClientUtil.commit(dir.listf("c:/temp", null), new File("c:/temp/ref.txt"));
+            if("1".equalsIgnoreCase(opt.trim())){
+                ClientUtil.clearScreen();
+                String line;
+                ArrayList<String> archivos = new ArrayList<String>();
+                int cont = 1;
+                System.out.println("¿Qué archivos deseas \"committear\"?");
+                BufferedReader br = new BufferedReader(new FileReader("ref.txt"));
+                while((line = br.readLine()) != null) {
+                    if(line.split(" ").length > 1){
+                        System.out.println(String.format("%d) %s", cont, line));
+                        archivos.add(line.split(" ")[0]);
+                        cont++;
+                    }
+                }
+                if(cont == 1){
+                    System.out.println("No hay cambios que committear");
+                    ClientUtil.clearScreen();
+                } else {
+                    int com = scan.nextInt();
+                    if(!(com > archivos.size() || com < 1)){
+                        String auxPath = "c:/temp/";
+                        File f = new File(archivos.get(com-1));
+                        String name = f.getName();
+                        int pos = name.lastIndexOf(".");
+                        if (pos > 0) {
+                            name = archivos.get(com-1);
+                            ClientUtil.commit(new File(auxPath+archivos.get(com-1)), name);
+                            ClientUtil.updateRef(archivos.get(com-1));
+                        }
+                    }
+                }
+                ClientUtil.clearScreen();
+
             }
             
         }

@@ -33,7 +33,7 @@ public class DirWatcher extends TimerTask {
     dfw = new DirFilterWatcher(filter);
     filesArray = this.listf(this.path, null);
     
-    File ref = new File("c:/temp/ref.txt");
+    File ref = new File("ref.txt");
     
     try{
         if(ref.length()==0){
@@ -41,11 +41,9 @@ public class DirWatcher extends TimerTask {
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
 
             for (File f : filesArray){
-                if(!"ref.txt".equals(f.getName())){
-                    Path filePath = Paths.get(f.getAbsolutePath());
-                    bw.write(Paths.get(path).relativize(filePath).toString());
-                    bw.newLine();
-                }
+                Path filePath = Paths.get(f.getAbsolutePath());
+                bw.write(Paths.get(path).relativize(filePath).toString());
+                bw.newLine();
             }
 
             bw.close();
@@ -125,11 +123,12 @@ public class DirWatcher extends TimerTask {
         if(action=="add"){ 
             temp.add(filepath+" "+action);
         }
-        String pathChange = "c:/temp/ref.txt";
+        String pathChange = "ref.txt";
         BufferedReader br = new BufferedReader(new FileReader(pathChange));
         while((line = br.readLine()) != null) {
             //cualquier accion menos agregar
-            if (line.contains(filepath)){
+            Path filePath = Paths.get(new File(filepath).getAbsolutePath());
+            if (line.contains(Paths.get(path).relativize(filePath).toString())){
                 if((line.split(" ").length<2))
                     temp.add(line+" "+action);
                 else if(!action.equals(line.split(" ")[1]))
