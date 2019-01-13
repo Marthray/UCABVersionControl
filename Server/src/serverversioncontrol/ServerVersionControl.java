@@ -134,11 +134,7 @@ public class ServerVersionControl {
         }
         
         while(true){
-            ServerVersionControl svc = new ServerVersionControl();
-            String path = svc.recibirCambios(serverSocket);
-            svc.save(serverSocket,path);
-            
-            System.out.println("Finalicé");
+            ServerUtil.commit(serverSocket);
         }
     }
 }

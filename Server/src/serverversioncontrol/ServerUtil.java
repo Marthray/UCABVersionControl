@@ -7,7 +7,14 @@ package serverversioncontrol;
 
 import DirWatcher.*;
 import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -22,10 +29,84 @@ public class ServerUtil {
      * @throws : IOException
      * @param: List<FileRecord> files
      */
-    public void commit(List<File> files){
-        for(File f : files){
-            
+    public static void commit(ServerSocket serverSocket) throws IOException{
+        String repoRoot = "commits";
+        DataInputStream dIn = null;
+        Socket socket = null;
+        String ruta = "";
+        File f = null;
+        InputStream in = null;
+        OutputStream out = null;
+        
+        FileUtils.forceMkdir(new File(repoRoot));
+        
+        try {
+            socket = serverSocket.accept();
+            dIn = new DataInputStream(socket.getInputStream());
+            ruta = dIn.readUTF();
+            String name = new File(ruta).getName();
+            int pos = name.lastIndexOf(".");
+            if (pos > 0) {
+                name = String.format("%s_%s",name.substring(0, pos),name.substring(pos+1));
+                File temp = new File(String.format("%s\\%s",repoRoot,name));
+                FileUtils.forceMkdir(temp);
+                String[] directories = temp.list(new FilenameFilter() {
+                    @Override
+                    public boolean accept(File current, String name) {
+                      return new File(current, name).isDirectory();
+                    }
+                });
+                System.out.println(directories);
+                pos = ruta.lastIndexOf("\\");
+                String commitPath = String.format("%s\\%d\\%s",temp.getPath(),directories.length+1,ruta.substring(0, pos));
+                FileUtils.forceMkdir(new File(commitPath));
+                f = new File(String.format("%s\\%s",commitPath, new File(ruta).getName()));
+            }
+            //f.getParentFile().mkdirs();
+        } catch (IOException ex) {
+            Logger.getLogger(ServerUtil.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                dIn.close();
+                socket.close();
+                System.out.println("Se creó el archivo que se recibirá: "+ruta);
+            } catch (IOException ex) {
+                Logger.getLogger(ServerUtil.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
+        
+        try {
+            socket = serverSocket.accept();
+            System.out.println("Conexión con el cliente exitosa");
+        } catch (IOException ex) {
+            System.out.println("Can't accept client connection. ");
+        }
+        
+        try {
+            in = socket.getInputStream();
+        } catch (IOException ex) {
+            System.out.println("Can't get socket input stream. ");
+        }
+
+        try {
+            out = new FileOutputStream(f);
+            System.out.println("Se creó el archivo");
+        } catch (FileNotFoundException ex) {
+            System.out.println("File not found. ");
+        }
+
+        byte[] bytes = new byte[16*1024];
+
+        int count;
+        while ((count = in.read(bytes)) > 0) {
+            out.write(bytes, 0, count);
+        }
+
+        out.close();
+        in.close();
+        socket.close();
+
+        System.out.println("El archivo se transfirió correctamente");
     }
     
     /**
