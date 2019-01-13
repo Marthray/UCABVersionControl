@@ -36,18 +36,18 @@ public class DirWatcher extends TimerTask {
     File ref = new File("ref.txt");
     
     try{
-        if(ref.length()==0){
-            FileOutputStream fos = new FileOutputStream(ref);
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+        if (ref.length() > 0){
+            ref.delete(); 
+       }
+        FileOutputStream fos = new FileOutputStream(ref);
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
 
-            for (File f : filesArray){
-                Path filePath = Paths.get(f.getAbsolutePath());
-                bw.write(Paths.get(path).relativize(filePath).toString());
-                bw.newLine();
-            }
-
-            bw.close();
+        for (File f : filesArray){
+            Path filePath = Paths.get(f.getAbsolutePath());
+            bw.write(Paths.get(path).relativize(filePath).toString());
+            bw.newLine();
         }
+        bw.close();
     }catch (FileNotFoundException e){
         System.out.println("No se encontró el archivo");
     }
@@ -115,21 +115,20 @@ public class DirWatcher extends TimerTask {
     }
   }
 
-  public void localLog(String filepath, String action){
+  public void localLog(File file, String action){
     String line;
     ArrayList<String> temp = new ArrayList<String>();
     try{
-        
-        if(action=="add"){ 
-            temp.add(filepath+" "+action);
+        Path filePath = Paths.get(file.getAbsolutePath());
+        if(action=="add"){
+            temp.add(Paths.get(path).relativize(filePath).toString()+" "+action);
         }
         String pathChange = "ref.txt";
         BufferedReader br = new BufferedReader(new FileReader(pathChange));
         while((line = br.readLine()) != null) {
             //cualquier accion menos agregar
-            Path filePath = Paths.get(new File(filepath).getAbsolutePath());
             if (line.contains(Paths.get(path).relativize(filePath).toString())){
-                if((line.split(" ").length<2))
+                if((line.split(" ").length<2) && !("delete".equals(action)))
                     temp.add(line+" "+action);
                 else if(!action.equals(line.split(" ")[1]))
                     temp.add(line.split(" ")[0]+" "+action);
@@ -158,8 +157,7 @@ public class DirWatcher extends TimerTask {
   
   protected void onChange( File file, String action ){
       //System.out.println( "File "+ file.getAbsolutePath() +" action: " + action );
-      
-      localLog(file.getAbsolutePath(), action);
+      localLog(file, action);
   }
 }
 

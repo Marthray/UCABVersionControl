@@ -1,3 +1,5 @@
+VersionControl\temp\final.txt modify
+VersionControl\temp\Nuevo delete
 ref.txt
 VersionControl\2222.txt
 VersionControl\temp\haha.txt

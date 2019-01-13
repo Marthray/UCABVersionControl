@@ -234,7 +234,55 @@ public class ServerUtil {
     }
 
     public static void checkout(ServerSocket serverSocket) {
+        Socket socket = null;
+        String rootDir = ".\\commits";
         
+        try {
+            socket = serverSocket.accept();
+            DataInputStream dIn = new DataInputStream(socket.getInputStream());
+            String fileString = dIn.readUTF();
+            dIn.close();
+            socket.close();
+            
+            String [] tempString = fileString.split("\\|");
+            String basePath = String.format("%s\\%s\\%s",rootDir,tempString[0],tempString[1]);
+            String relativePath = "";
+            
+            File temp = new File(basePath);
+            
+            File [] files = ServerUtil.listf(basePath, null);
+            
+            if(files[0].getPath().startsWith(basePath)){
+                relativePath = files[0].getPath().substring(basePath.length()+1);
+            }
+            
+            socket = serverSocket.accept();
+            DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+
+            dOut.writeUTF(relativePath);
+            dOut.flush(); // Send off the data
+
+            dOut.close();
+            socket.close();
+            
+            socket = serverSocket.accept();
+            
+            byte[] bytes = new byte[16 * 1024];
+            InputStream in = new FileInputStream(files[0]);
+            OutputStream out = socket.getOutputStream();
+
+            int count;
+            while ((count = in.read(bytes)) > 0) {
+                out.write(bytes, 0, count);
+            }
+            out.close();
+            in.close();
+            
+            socket.close();
+            
+        } catch(IOException e){
+            
+        }
     }
 
     static void returnVersions(ServerSocket serverSocket) {

@@ -188,4 +188,52 @@ public class ClientUtil {
         
         return new ArrayList<String>(Arrays.asList(versions));
     }
+    
+    public static void checkout(String folder, int version) throws IOException{
+        String auxPath = "c:\\temp";
+        String host = "127.0.0.1";
+        InputStream in = null;
+        OutputStream out = null;
+        //Este bloque obtiene la ruta completa del archivo en el repo
+        Socket socket = new Socket(host, 4444);
+        DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
+        dOut.writeUTF(folder+"|"+version);
+        dOut.flush();
+        dOut.close();
+        socket.close();
+        
+        socket = new Socket(host, 4444);
+            
+        DataInputStream dIn = new DataInputStream(socket.getInputStream());
+        String filePath = dIn.readUTF();
+        dIn.close();
+        socket.close();
+
+        socket = new Socket (host, 4444);
+        File serverFile = new File(auxPath+"\\"+filePath);
+        serverFile.getParentFile().mkdirs();
+
+        try {
+            in = socket.getInputStream();
+        } catch (IOException ex) {
+            System.out.println("Can't get socket input stream. ");
+        }
+
+        try {
+            out = new FileOutputStream(serverFile);
+        } catch (FileNotFoundException ex) {
+            System.out.println("File not found. ");
+        }
+
+        byte[] bytes = new byte[16*1024];
+
+        int count;
+        while ((count = in.read(bytes)) > 0) {
+            out.write(bytes, 0, count);
+        }
+
+        out.close();
+        in.close();
+        socket.close();
+    }
 }

@@ -46,7 +46,7 @@ public class ClientVersionControl {
                 System.out.println("¿Qué archivos deseas \"committear\"?");
                 BufferedReader br = new BufferedReader(new FileReader("ref.txt"));
                 while((line = br.readLine()) != null) {
-                    if(line.split(" ").length > 1){
+                    if(line.split(" ").length > 1 && !("delete".equals(line.split(" ")[1]))){
                         System.out.println(String.format("%d) %s", cont, line));
                         archivos.add(line.split(" ")[0]);
                         cont++;
@@ -106,6 +106,7 @@ public class ClientVersionControl {
                     if(!(com > files.size() || com < 1)){
                         String [] tempfile = files.get(com-1).split("\\.");
                         ClientUtil.update(String.format("%s_%s", tempfile[0],tempfile[1]));
+                        ClientUtil.updateRef(files.get(com-1));
                         ClientUtil.clearScreen();
                     }
                 }
@@ -142,6 +143,13 @@ public class ClientVersionControl {
                             System.out.println(String.format("%d) %s", versionCont, version));
                             versionCont++; 
                         }
+                        int comVersion = scan.nextInt();
+                        if(!(comVersion > versions.size() && comVersion < 1)){
+                            ClientUtil.checkout(String.format("%s_%s", tempfile[0],tempfile[1]), comVersion);
+                            ClientUtil.updateRef(files.get(com-1));
+                            ClientUtil.clearScreen();
+                        }
+                        
                         ClientUtil.clearScreen();
                     }
                 }
