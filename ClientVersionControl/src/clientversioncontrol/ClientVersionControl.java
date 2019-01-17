@@ -24,7 +24,7 @@ public class ClientVersionControl {
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        TimerTask task = new DirWatcher("c:/temp", "" );
+        TimerTask task = new DirWatcher(".", "" );
 
             Timer timer = new Timer();
             timer.schedule( task , new Date(), 1000 );
@@ -58,7 +58,7 @@ public class ClientVersionControl {
                 } else {
                     int com = scan.nextInt();
                     if(!(com > archivos.size() || com < 1)){
-                        String auxPath = "c:/temp/";
+                        String auxPath = "";
                         File f = new File(archivos.get(com-1));
                         String name = f.getName();
                         int pos = name.lastIndexOf(".");

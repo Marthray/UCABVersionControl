@@ -60,7 +60,11 @@ public class ServerUtil {
                 });
                 System.out.println(directories);
                 pos = ruta.lastIndexOf("\\");
-                String commitPath = String.format("%s\\%d\\%s",temp.getPath(),directories.length+1,ruta.substring(0, pos));
+                String commitPath="";
+                if(pos > 0)
+                   commitPath = String.format("%s\\%d\\%s",temp.getPath(),directories.length+1,ruta.substring(0, pos));
+                else
+                    commitPath = String.format("%s\\%d",temp.getPath(),directories.length+1);
                 FileUtils.forceMkdir(new File(commitPath));
                 f = new File(String.format("%s\\%s",commitPath, new File(ruta).getName()));
             }

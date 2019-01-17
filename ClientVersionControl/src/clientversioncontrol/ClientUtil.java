@@ -89,7 +89,7 @@ public class ClientUtil {
      * @throws : IOException, 
      */
     public static void update(String file){
-        String auxPath = "c:\\temp";
+        String auxPath = "";
         String host = "127.0.0.1";
         InputStream in = null;
         OutputStream out = null;
@@ -110,8 +110,8 @@ public class ClientUtil {
             socket.close();
             
             socket = new Socket (host, 4444);
-            File serverFile = new File(auxPath+"\\"+filePath);
-            serverFile.getParentFile().mkdirs();
+            File serverFile = new File(filePath);
+            //serverFile.getParentFile().mkdirs();
             
             try {
                 in = socket.getInputStream();
@@ -190,7 +190,7 @@ public class ClientUtil {
     }
     
     public static void checkout(String folder, int version) throws IOException{
-        String auxPath = "c:\\temp";
+        String auxPath = "";
         String host = "127.0.0.1";
         InputStream in = null;
         OutputStream out = null;
@@ -210,8 +210,8 @@ public class ClientUtil {
         socket.close();
 
         socket = new Socket (host, 4444);
-        File serverFile = new File(auxPath+"\\"+filePath);
-        serverFile.getParentFile().mkdirs();
+        File serverFile = new File(filePath);
+        //serverFile.getParentFile().mkdirs();
 
         try {
             in = socket.getInputStream();

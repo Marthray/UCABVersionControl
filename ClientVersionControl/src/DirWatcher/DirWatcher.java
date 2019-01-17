@@ -29,7 +29,8 @@ public class DirWatcher extends TimerTask {
   }
 
   public DirWatcher(String path, String filter) {
-    this.path = path;
+    File currentDirectory = new File(new File(".").getAbsolutePath());
+    this.path = currentDirectory.getAbsolutePath();
     dfw = new DirFilterWatcher(filter);
     filesArray = this.listf(this.path, null);
     
@@ -44,7 +45,7 @@ public class DirWatcher extends TimerTask {
 
         for (File f : filesArray){
             Path filePath = Paths.get(f.getAbsolutePath());
-            bw.write(Paths.get(path).relativize(filePath).toString());
+            bw.write(Paths.get(this.path).relativize(filePath).toString());
             bw.newLine();
         }
         bw.close();

@@ -1,6 +1,30 @@
-VersionControl\temp\final.txt modify
-VersionControl\temp\Nuevo delete
-ref.txt
-VersionControl\2222.txt
-VersionControl\temp\haha.txt
-VersionControl\test.txt
+asdasdasd.txt modify
+blala\asdasdasd.txt modify
+blala\holax.txt
+build\built-jar.properties
+build\classes\.netbeans_automatic_build
+build\classes\.netbeans_update_resources
+build\classes\clientversioncontrol\ClientUtil.class
+build\classes\clientversioncontrol\ClientVersionControl.class
+build\classes\DirWatcher\DirFilterWatcher.class
+build\classes\DirWatcher\DirWatcher.class
+build.xml
+dist\ClientVersionControl.jar
+dist\lib\commons-io-2.6.jar
+dist\README.TXT
+lib\commons-io-2.6.jar
+lib\CopyLibs\org-netbeans-modules-java-j2seproject-copylibstask.jar
+lib\DirWatch.jar
+lib\nblibraries.properties
+manifest.mf
+nbproject\build-impl.xml
+nbproject\genfiles.properties
+nbproject\private\config.properties
+nbproject\private\private.properties
+nbproject\private\private.xml
+nbproject\project.properties
+nbproject\project.xml
+src\clientversioncontrol\ClientUtil.java
+src\clientversioncontrol\ClientVersionControl.java
+src\DirWatcher\DirFilterWatcher.java
+src\DirWatcher\DirWatcher.java
